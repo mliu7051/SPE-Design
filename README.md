@@ -1,5 +1,5 @@
 ### SPE-Design
-This repository contains the code and data associated with the article *A Novel Computational-Experimental Approach for Advanced Solid Polymer Electrolyte Design* by M Liu, CL Clement, K Liu, TD Sparks, and X Wang.
+This repository contains the code and data associated with the article *A Computational-Experimental Approach for Advanced Solid Polymer Electrolyte Design* by M Liu, CL Clement, K Liu, TD Sparks, and X Wang.
 
 *Final Code.py* is the script containing the linear regression, decision tree, random forest, and SVM models discussed in the article.
 
