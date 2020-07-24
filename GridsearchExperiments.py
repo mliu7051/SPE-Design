@@ -5,152 +5,149 @@ Created on Sun Apr 12 11:36:31 2020
 """
 
 import numpy as np
-import math
 import pandas as pd
 from sklearn.ensemble import RandomForestRegressor as rfr
 from sklearn.tree import DecisionTreeRegressor as dtr
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression as lr
+from sklearn.linear_model import LinearRegression as linear
 from sklearn.linear_model import Lasso as lasso
 from sklearn.linear_model import Ridge as ridge
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import GridSearchCV
 from sklearn.svm import SVR
-import seaborn as sns
-import matplotlib.pyplot as plt
+from sklearn.preprocessing import StandardScaler
 
-#---------------------------------------------------------------------------------------------------
-
-#This first section splits each dataset into a training and testing set in order
-#to initially measure the accuracy of each model. The MAE and RMSE are measured
-#for each model by comparing each model's predicted values of conductivity
-#against the actual conductivity values.
-
-# Add skiprows b/c it was taking data set names to be column titles
+# The skiprows argument is because the first row is dataset number
 literature_data = pd.read_csv('Feed In Data.csv', skiprows=1)
 
-#Dataset 3 - this line extracts dataset 3 from the complete dataset file
+# Extract dataset 3 from the complete dataset frame
 literature_data = literature_data.drop(columns=['1author2', '1author3', 'LiTFSIwt3', 'temp C3', 'exponent3', 'Unnamed: 4', 'LiTFSIwt2', 'temp C2', 'exponent2', 'Unnamed: 9', '1author'])
 
-#separates the dataset into a training and testing set
+# Separate the dataset into training and test sets
 literature_data = literature_data.dropna()
 litfeat = literature_data.drop(columns = ['exponent'])
 litprop = literature_data['exponent']
-X_train, X_test, y_train, y_test = train_test_split(litfeat, litprop, test_size=0.2, random_state=4)
+X_train, X_test, y_train, y_test = train_test_split(litfeat, litprop, test_size=0.2, random_state=5)
 
+# Scale features
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform (X_test)
 
-#-------------------------------linear regression train and test------------------------------------------------------------------
-"""
-linreg = lr(normalize=True)
-linreg.fit(X_train, y_train)
-linreg_pred = linreg.predict(X_test)
-
-linreg_rmse = mean_squared_error(y_test, linreg_pred)
-print('linreg MAE: ' + str(sum(abs(linreg_pred - y_test))/(len(y_test))))
-print('linreg RMSE: ' + str(np.sqrt(linreg_rmse)))
-
-
-#-------------------------------lasso regression gridsearch------------------------------------------------------------------
-
-lassoreg = lasso(normalize=True)
-lassoreg.fit(X_train, y_train)
-lassoreg_pred = lassoreg.predict(X_test)
-
-lassoreg_rmse = mean_squared_error(y_test, lassoreg_pred)
-print('lassoreg MAE: ' + str(sum(abs(lassoreg_pred - y_test))/(len(y_test))))
-print('lassoreg RMSE: ' + str(np.sqrt(lassoreg_rmse)))
+#------------------------LINEAR REGRESSION------------------------------------
 
 """
-#-------------------------------ridge regression gridsearch------------------------------------------------------------------
-
-"""
-gridsearch = GridSearchCV(estimator=ridge(),
+gridsearch = GridSearchCV(estimator=linear(),
                           param_grid={
-                              'alpha':[0.001, 0.01, 0.1, 1],
                               'normalize':['True','False']
                               },
-                          scoring='neg_mean_squared_error')
+                          scoring='neg_mean_absolute_error')
 
 grid_result = gridsearch.fit(X_train, y_train)
 grid_pred = gridsearch.predict(X_test)
 grid_rmse = mean_squared_error(y_test, grid_pred)
-print('grid MAE: ' + str(sum(abs(grid_pred - y_test))/(len(y_test))))
-print('grid RMSE: ' + str(np.sqrt(grid_rmse)))
-best_params = grid_result.best_params_
-best_score = grid_result.best_score_
-print(best_params)
-print(math.sqrt(abs(best_score)))
-"""
+print('Linear Regression MAE: ' + str(sum(abs(grid_pred - y_test))/(len(y_test))))
+print('Linear Regression RMSE: ' + str(np.sqrt(grid_rmse)))
+print(grid_result.best_params_)
+print(abs(grid_result.best_score_))
 
-#-------------------------------add gridsearch to decision trees and random forests ---------------------------------
-
-# begin decision trees
 """
-gridsearch = GridSearchCV(estimator=dtr(random_state=4),
+#------------------------LASSO REGRESSION GRIDSEARCH--------------------------
+
+"""
+gridsearch = GridSearchCV(estimator=lasso(random_state=5),
                           param_grid={
-                              'max_depth':[1,2,3,4,5,6,7,8,9,10,11,12],
+                              'alpha':[0.0001,0.001,0.1,1,10,100,1000],
+                              'normalize':['True','False']
+                              },
+                          scoring='neg_mean_absolute_error')
+
+grid_result = gridsearch.fit(X_train, y_train)
+grid_pred = gridsearch.predict(X_test)
+grid_rmse = mean_squared_error(y_test, grid_pred)
+print('Lasso MAE: ' + str(sum(abs(grid_pred - y_test))/(len(y_test))))
+print('Lasso RMSE: ' + str(np.sqrt(grid_rmse)))
+print(grid_result.best_params_)
+print(abs(grid_result.best_score_))
+
+"""
+#--------------------------RIDGE REGRESSION GRIDSEARCH------------------------
+
+"""
+gridsearch = GridSearchCV(estimator=ridge(random_state=5),
+                          param_grid={
+                              'alpha':[0.0001,0.001,0.1,1,10,100,1000],
+                              'normalize':['True','False']
+                              },
+                          scoring='neg_mean_absolute_error')
+
+grid_result = gridsearch.fit(X_train, y_train)
+grid_pred = gridsearch.predict(X_test)
+grid_rmse = mean_squared_error(y_test, grid_pred)
+print('Ridge MAE: ' + str(sum(abs(grid_pred - y_test))/(len(y_test))))
+print('Ridge RMSE: ' + str(np.sqrt(grid_rmse)))
+print(grid_result.best_params_)
+print(abs(grid_result.best_score_))
+
+"""
+#-------------------------DECISION TREE GRIDSEARCH----------------------------
+
+"""
+gridsearch = GridSearchCV(estimator=dtr(random_state=5),
+                          param_grid={
+                              'max_depth':[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],
                               'min_samples_split':[2,3,4,5],
                               'min_samples_leaf':[1,2,3,4,5]
                               },
-                          scoring='neg_mean_squared_error')
+                          scoring='neg_mean_absolute_error')
 
 grid_result = gridsearch.fit(X_train, y_train)
 grid_pred = gridsearch.predict(X_test)
 grid_rmse = mean_squared_error(y_test, grid_pred)
-print('grid MAE: ' + str(sum(abs(grid_pred - y_test))/(len(y_test))))
-print('grid RMSE: ' + str(np.sqrt(grid_rmse)))
-best_params = grid_result.best_params_
-best_score = grid_result.best_score_
-print(best_params)
-print(math.sqrt(abs(best_score)))
+print('Decision Tree MAE: ' + str(sum(abs(grid_pred - y_test))/(len(y_test))))
+print('Decision Tree RMSE: ' + str(np.sqrt(grid_rmse)))
+print(grid_result.best_params_)
+print(abs(grid_result.best_score_))
+
 """
+#--------------------------RANDOM FOREST GRIDSEARCH---------------------------
 
-
-# begin random forests
-
-### Need to go lower on n_estimators! Shouldn't come up against a boundary
-gridsearch = GridSearchCV(estimator=rfr(random_state=4),
+"""
+gridsearch = GridSearchCV(estimator=rfr(random_state=5),
                           param_grid={
-                              'n_estimators':[50,75,100,125,150,175,200],
-                              'max_depth':[5,6,7,8,9,10,11,12,13,14,15]
+                              'n_estimators':[20,25,30],
+                              'max_depth':[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],
+                              'min_samples_split':[2,3,4,5],
+                              'min_samples_leaf':[1,2,3,4,5]
                               },
-                          scoring='neg_mean_squared_error')
+                          scoring='neg_mean_absolute_error')
 
 grid_result = gridsearch.fit(X_train, y_train)
 grid_pred = gridsearch.predict(X_test)
 grid_rmse = mean_squared_error(y_test, grid_pred)
-print('grid MAE: ' + str(sum(abs(grid_pred - y_test))/(len(y_test))))
-print('grid RMSE: ' + str(np.sqrt(grid_rmse)))
-best_params = grid_result.best_params_
-best_score = grid_result.best_score_
-print(best_params)
-print(math.sqrt(abs(best_score)))
+print('Random Forest MAE: ' + str(sum(abs(grid_pred - y_test))/(len(y_test))))
+print('Random Forest RMSE: ' + str(np.sqrt(grid_rmse)))
+print(grid_result.best_params_)
+print(abs(grid_result.best_score_))
 
-# Check max_depth against overfitting!
-#-------------------------------support vector machine 1 train and test------------------------------------------------------------
 """
-gridsearch = GridSearchCV(estimator=SVR(),
+#--------------------------SVR GRIDSEARCH-------------------------------------
+
+"""
+gridsearch = GridSearchCV(estimator=SVR(kernel='rbf'),
                           param_grid={
-                              'kernel':['rbf','linear','poly','sigmoid'],
-                              'gamma':[0.01, 0.1, 1, 10, 100],
-                              'C':[0.01, 0.1, 1, 10, 100]
+                              'gamma':['scale','auto',0.1,1],
+                              'C':[3,3.5,4],
+                              'epsilon':[0.01,0.1,1]
                               },
-                          scoring='neg_mean_squared_error')
+                          scoring='neg_mean_absolute_error')
 
 grid_result = gridsearch.fit(X_train, y_train)
 grid_pred = gridsearch.predict(X_test)
 grid_rmse = mean_squared_error(y_test, grid_pred)
-print('grid MAE: ' + str(sum(abs(grid_pred - y_test))/(len(y_test))))
-print('grid RMSE: ' + str(np.sqrt(grid_rmse)))
-best_params = grid_result.best_params_
-best_score = grid_result.best_score_
-print(best_params)
-print(math.sqrt(abs(best_score)))
+print('SVR MAE: ' + str(sum(abs(grid_pred - y_test))/(len(y_test))))
+print('SVR RMSE: ' + str(np.sqrt(grid_rmse)))
+print(grid_result.best_params_)
+print(abs(grid_result.best_score_))
+
 """
-
-
-# Cross validation
-# Standardization and normalization
-# Exhaustive parameter gridsearch for all models
-# Get TDS to check paper against the revisions?
-# Widen SVR param grid
