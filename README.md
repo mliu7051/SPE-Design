@@ -1,5 +1,5 @@
 ### SPE-Design
-This repository contains the code and data associated with the article *A Data Science Approach to Solid Polymer Electrolyte Design* by M Liu, CL Clement, K Liu, X Wang, and TD Sparks.
+This repository contains the code and data associated with the article *A Data Science Approach for Advanced Solid Polymer Electrolyte Design* by M Liu, CL Clement, K Liu, X Wang, and TD Sparks.
 
 - *Final Code.py* is the script containing the linear regression, decision tree, random forest, and SVM models discussed in the article.
 
