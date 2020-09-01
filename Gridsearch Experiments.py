@@ -24,12 +24,12 @@ import matplotlib.pyplot as plt
 # The skiprows argument is because the first row is dataset number
 literature_data = pd.read_csv('Feed In Data.csv', skiprows=1)
 
-"""#Dataset 1 - this line extracts dataset 1 from the complete dataset file
+#Dataset 1 - this line extracts dataset 1 from the complete dataset file
 literature_data = literature_data.drop(columns=['1author3', '1author2', 'LiTFSIwt2', 'temp C2', 'exponent2', 'Unnamed: 4', 'LiTFSIwt', 'temp C', 'exponent', 'Unnamed: 9', '1author'])
-"""
-"""#Dataset 2 - this line extracts dataset 2 from the complete dataset file
+
+#Dataset 2 - this line extracts dataset 2 from the complete dataset file
 literature_data = literature_data.drop(columns=['1author2', '1author3', 'LiTFSIwt3', 'temp C3', 'exponent3', 'Unnamed: 4', 'LiTFSIwt', 'temp C', 'exponent', 'Unnamed: 9', '1author'])
-"""
+
 #Dataset 3 - this line extracts dataset 3 from the complete dataset file
 literature_data = literature_data.drop(columns=['1author2', '1author3', 'LiTFSIwt3', 'temp C3', 'exponent3', 'Unnamed: 4', 'LiTFSIwt2', 'temp C2', 'exponent2', 'Unnamed: 9', '1author'])
 
@@ -45,8 +45,9 @@ scaler = StandardScaler()
 X_train = scaler.fit_transform(X_train)
 X_test = scaler.transform (X_test)
 
-#------------------------LINEAR REGRESSION------------------------------------
-
+#------------------------LINEAR REGRESSION GRIDSEARCH------------------------------------
+""" the only parameter we input into the gridsearch is 'normalize', which was optimized
+to be 'True' """
 
 gridsearch = GridSearchCV(estimator=linear(), cv=5,
                           param_grid={
@@ -64,11 +65,12 @@ print(abs(grid_result.best_score_))
 
 
 #------------------------LASSO REGRESSION GRIDSEARCH--------------------------
-"""
+""" the best values for each parameter came out as: 'alpha'=0.001 and
+'normalize'=True """
 
 gridsearch = GridSearchCV(estimator=lasso(random_state=4), cv=5,
                           param_grid={
-                              'alpha':[0.0001,0.001,0.1,1,10,100,1000],
+                              'alpha':[0.0001,0.001,0.01,0.1,1,10,100,1000],
                               'normalize':['True','False']
                               },
                           scoring='neg_mean_absolute_error')
@@ -81,13 +83,14 @@ print('Lasso RMSE: ' + str(np.sqrt(grid_rmse)))
 print(grid_result.best_params_)
 print(abs(grid_result.best_score_))
 
-"""
+
 #--------------------------RIDGE REGRESSION GRIDSEARCH------------------------
-"""
+""" the best values for each parameter came out as: 'alpha'=0.001 and
+'normalize'=True """
 
 gridsearch = GridSearchCV(estimator=ridge(random_state=4), cv=5,
                           param_grid={
-                              'alpha':[0.0001,0.001,0.1,1,10,100,1000],
+                              'alpha':[0.0001,0.001,0.01,0.1,1,10,100,1000],
                               'normalize':['True','False']
                               },
                           scoring='neg_mean_absolute_error')
@@ -100,13 +103,14 @@ print('Ridge RMSE: ' + str(np.sqrt(grid_rmse)))
 print(grid_result.best_params_)
 print(abs(grid_result.best_score_))
 
-"""
+
 #-------------------------DECISION TREE GRIDSEARCH----------------------------
-"""
+""" the best values for each parameter came out as: 'max_depth'=12,
+'min_samples_leaf'=1, and 'min_samples_split'=2 """
 
 gridsearch = GridSearchCV(estimator=dtr(random_state=4), cv=5,
                           param_grid={
-                              'max_depth':[10,11,12,13,14,15,16,17,18,19,20],
+                              'max_depth':[10,20,30,40,50],
                               'min_samples_split':[2,3,4,5],
                               'min_samples_leaf':[1,2,3,4,5]
                               },
@@ -120,16 +124,19 @@ print('Decision Tree RMSE: ' + str(np.sqrt(grid_rmse)))
 print(grid_result.best_params_)
 print(abs(grid_result.best_score_))
 
-"""
+
 #--------------------------RANDOM FOREST GRIDSEARCH---------------------------
-"""
+""" the best values for each parameter came out as: 'max_depth'=14,
+'min_samples_leaf'=1, 'min_samples_split'=2, and 'n_estimators'=12 """
 
 gridsearch = GridSearchCV(estimator=rfr(random_state=4), cv=5,
                           param_grid={
-                              'n_estimators':[12],
-                              'max_depth':[14],
-                              'min_samples_split':[2],
-                              'min_samples_leaf':[1]
+                              'n_estimators':[10,20,40,70,100,500,1000],
+ """we selected the n_estimators at approximately the point of diminishing
+ performance returns, which is why the optimal value ended up being so low"""
+                              'max_depth':[10,20,30,40,50],
+                              'min_samples_split':[2,3,4,5],
+                              'min_samples_leaf':[1,2,3,4,5]
                               },
                           scoring='neg_mean_absolute_error')
 
@@ -144,24 +151,16 @@ print(abs(grid_result.best_score_))
 residuals = y_test-grid_pred
 sns.distplot(residuals, bins=40)
 plt.show()
-"""
 
-"""
-randomforestmodel = rfr(random_state=4)
-randomforestmodel.fit(X_train, y_train)
-rf_pred = randomforestmodel.predict(X_test)
-rf_rmse = mean_squared_error(y_test, rf_pred)
-print('rf MAE: ' + str(sum(abs(rf_pred - y_test))/(len(y_test))))
-print('rf RMSE: ' + str(np.sqrt(rf_rmse)))
-"""
 #--------------------------SVR GRIDSEARCH-------------------------------------
-"""
+""" the best values for each parameter came out as: 'C'=4, 'epsilon'=0.1,
+and 'gamma'=scale """
 
 gridsearch = GridSearchCV(estimator=SVR(kernel='rbf'), cv=5,
                           param_grid={
                               'gamma':['scale','auto',0.1,1],
-                              'C':[5,10,15,20],
-                              'epsilon':[0.0001,0.001,0.01]
+                              'C':[5,10,15,20,25,30],
+                              'epsilon':[0.0001,0.001,0.01,0.1,1,10,100,1000]
                               },
                           scoring='neg_mean_absolute_error')
 
@@ -173,37 +172,3 @@ print('SVR RMSE: ' + str(np.sqrt(grid_rmse)))
 print(grid_result.best_params_)
 print(abs(grid_result.best_score_))
 
-"""
-
-#--------------------------------------------------------------------------------------------
-
-
-
-
-
-
-
-
-"""
-literature_data = pd.read_csv('Feed In Data.csv', skiprows=1)
-testvalues = pd.read_csv('predicted results.csv')
-
-#Dataset 3 - this line extracts dataset 3 from the complete dataset file
-literature_data = literature_data.drop(columns=['1author2', '1author3', 'LiTFSIwt3', 'temp C3', 'exponent3', 'Unnamed: 4', 'LiTFSIwt2', 'temp C2', 'exponent2', 'Unnamed: 9', '1author'])
-
-literature_data = literature_data.dropna()
-X_train = literature_data.drop(columns = ['exponent'])
-y_train = literature_data['exponent']
-
-gridsearch = GridSearchCV(estimator=rfr(random_state=4), cv=5,
-                          param_grid={
-                              'n_estimators':[12],
-                              'max_depth':[14],
-                              'min_samples_split':[2],
-                              'min_samples_leaf':[1]
-                              },
-                          scoring='neg_mean_absolute_error')
-
-grid_result = gridsearch.fit(X_train, y_train)
-grid_pred = gridsearch.predict(testvalues)
-"""
