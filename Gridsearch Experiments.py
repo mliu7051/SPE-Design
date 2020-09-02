@@ -47,7 +47,7 @@ X_test = scaler.transform (X_test)
 
 #------------------------LINEAR REGRESSION GRIDSEARCH------------------------------------
 """ the only parameter we input into the gridsearch is 'normalize', which was optimized
-to be 'True' """
+to be 'True' using Dataset 3 """
 
 gridsearch = GridSearchCV(estimator=linear(), cv=5,
                           param_grid={
@@ -64,9 +64,9 @@ print(grid_result.best_params_)
 print(abs(grid_result.best_score_))
 
 
-#------------------------LASSO REGRESSION GRIDSEARCH--------------------------
+#------------------------LASSO REGRESSION GRIDSEARCH------------------------------------
 """ the best values for each parameter came out as: 'alpha'=0.001 and
-'normalize'=True """
+'normalize'=True using Dataset 3 """
 
 gridsearch = GridSearchCV(estimator=lasso(random_state=4), cv=5,
                           param_grid={
@@ -84,9 +84,9 @@ print(grid_result.best_params_)
 print(abs(grid_result.best_score_))
 
 
-#--------------------------RIDGE REGRESSION GRIDSEARCH------------------------
+#--------------------------RIDGE REGRESSION GRIDSEARCH-----------------------------------
 """ the best values for each parameter came out as: 'alpha'=0.001 and
-'normalize'=True """
+'normalize'=True using Dataset 3 """
 
 gridsearch = GridSearchCV(estimator=ridge(random_state=4), cv=5,
                           param_grid={
@@ -104,9 +104,9 @@ print(grid_result.best_params_)
 print(abs(grid_result.best_score_))
 
 
-#-------------------------DECISION TREE GRIDSEARCH----------------------------
+#-------------------------DECISION TREE GRIDSEARCH----------------------------------------
 """ the best values for each parameter came out as: 'max_depth'=12,
-'min_samples_leaf'=1, and 'min_samples_split'=2 """
+'min_samples_leaf'=1, and 'min_samples_split'=2 using Dataset 3 """
 
 gridsearch = GridSearchCV(estimator=dtr(random_state=4), cv=5,
                           param_grid={
@@ -125,9 +125,9 @@ print(grid_result.best_params_)
 print(abs(grid_result.best_score_))
 
 
-#--------------------------RANDOM FOREST GRIDSEARCH---------------------------
+#--------------------------RANDOM FOREST GRIDSEARCH----------------------------------------
 """ the best values for each parameter came out as: 'max_depth'=14,
-'min_samples_leaf'=1, 'min_samples_split'=2, and 'n_estimators'=12 """
+'min_samples_leaf'=1, 'min_samples_split'=2, and 'n_estimators'=12 using Dataset 3 """
 
 gridsearch = GridSearchCV(estimator=rfr(random_state=4), cv=5,
                           param_grid={
@@ -152,9 +152,9 @@ residuals = y_test-grid_pred
 sns.distplot(residuals, bins=40)
 plt.show()
 
-#--------------------------SVR GRIDSEARCH-------------------------------------
+#--------------------------SVR GRIDSEARCH----------------------------------------------------
 """ the best values for each parameter came out as: 'C'=4, 'epsilon'=0.1,
-and 'gamma'=scale """
+and 'gamma'=scale using Dataset 3 """
 
 gridsearch = GridSearchCV(estimator=SVR(kernel='rbf'), cv=5,
                           param_grid={
@@ -170,5 +170,50 @@ grid_rmse = mean_squared_error(y_test, grid_pred)
 print('SVR MAE: ' + str(sum(abs(grid_pred - y_test))/(len(y_test))))
 print('SVR RMSE: ' + str(np.sqrt(grid_rmse)))
 print(grid_result.best_params_)
-print(abs(grid_result.best_score_))
+
+
+
+
+
+#---------------------EXPERIMENTAL VALIDATION RANDOM FOREST MODEL-----------------------------
+
+#This section trains only the random forest model with the entire dataset 3
+#(which was determined to be the most accurate model), without
+#splitting it into a training and testing set. The RF model then makes
+#predictions based off of the parameters in the testvalues data frame, which are
+#then validated using experiments done independently.
+
+literature_data = pd.read_csv('Feed In Data.csv')
+testvalues = pd.DataFrame()
+testvalues['LiTFSIwt'] = [10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60]
+testvalue['temperature'] = [25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25]
+
+#Dataset 3 - this line extracts dataset 3 from the complete dataset file
+literature_data = literature_data.drop(columns=['1author2', '1author3', 'LiTFSIwt3', 'temp C3', 'exponent3', 'Unnamed: 4', 'LiTFSIwt2', 'temp C2', 'exponent2', 'Unnamed: 9', '1author'])
+#    only dataset 3 was used in this section because it resulted in the most
+#    accurate predictions from all models
+
+literature_data = literature_data.dropna()
+X_train = literature_data.drop(columns = ['exponent'])
+y_train = literature_data['exponent']
+
+# Scale features
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform (X_test)
+
+
+""" there is only one value inputted into each parameter because these were
+the optimal values that came out of the previous RF gridsearch above """
+gridsearch = GridSearchCV(estimator=rfr(random_state=4), cv=5,
+                          param_grid={
+                              'n_estimators':[12],
+                              'max_depth':[14],
+                              'min_samples_split':[2],
+                              'min_samples_leaf':[1]
+                              },
+                          scoring='neg_mean_absolute_error')
+
+rf_result = gridsearch.fit(X_train, y_train)
+rf_pred = randomforestmodel.predict(testvalues)
 
